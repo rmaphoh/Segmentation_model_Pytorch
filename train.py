@@ -99,7 +99,7 @@ def train_net(model_fl,
 
 
     early_stop_path = dir_checkpoint + 'es_checkpoint.pth'
-    early_stop = EarlyStopping(patience=50,verbose=True, path=early_stop_path)
+    early_stop = EarlyStopping(patience=15,verbose=True, path=early_stop_path)
     best_F1 =0.0
     best_loss = 100
     for epoch in range(epochs):
@@ -208,15 +208,6 @@ def train_net(model_fl,
                             pass
                         torch.save(model_fl.state_dict(), dir_checkpoint + f'best_checkpoint.pth')
                         logging.info(f'Checkpoint {epoch + 1} saved !')
-                    #if epoch_loss<best_loss:
-                    #    best_loss = epoch_loss
-                    #    try:
-                    #        os.mkdir(dir_checkpoint)
-                    #        logging.info('Created checkpoint directory')
-                    #    except OSError:
-                    #        pass
-                    #    torch.save(model_fl.state_dict(), dir_checkpoint + f'best_checkpoint.pth')
-                    #    logging.info(f'Checkpoint {epoch + 1} saved !')
 
 
     writer.close()
