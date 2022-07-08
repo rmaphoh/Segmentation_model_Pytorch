@@ -54,7 +54,7 @@ def train_net(model_fl,
     tensorizer = p_tr.ToTensor()
     # geometric transforms
     h_flip = p_tr.RandomHorizontalFlip()
-    rotate = p_tr.RandomRotation(degrees=10, fill=(0, 0, 0), fill_tg=0)
+    rotate = p_tr.RandomRotation(degrees=60, fill=(0, 0, 0), fill_tg=0)
     scale = p_tr.RandomAffine(degrees=0, scale=(0.95, 1.10))
     transl = p_tr.RandomAffine(degrees=0, translate=(0.05, 0))
     elastic = p_tr.RandomElastic(alpha=1, sigma=0.05)
@@ -99,8 +99,8 @@ def train_net(model_fl,
 
 
     early_stop_path = dir_checkpoint + 'es_checkpoint.pth'
-    early_stop = EarlyStopping(patience=25,verbose=True, path=early_stop_path)
-    best_acc =0.0
+    early_stop = EarlyStopping(patience=50,verbose=True, path=early_stop_path)
+    best_F1 =0.0
     best_loss = 100
     for epoch in range(epochs):
 
@@ -188,7 +188,7 @@ def train_net(model_fl,
 
                     writer.add_scalar('Acc/val_acc', epoch_acc, epoch) 
                     writer.add_scalar('Loss/val_loss', epoch_loss, epoch) 
-                    writer.add_scalar('F1/val_f1', epoch_loss, epoch) 
+                    writer.add_scalar('F1/val_f1', epoch_f1, epoch) 
 
                     scheduler.step(epoch_loss)
 
@@ -199,9 +199,8 @@ def train_net(model_fl,
                     if early_stop.early_stop:
                         print('Early stopping')
                         return              
-                    #if epoch_loss>best_acc:
-                    if epoch_loss<best_loss:
-                        best_loss = epoch_loss
+                    if best_F1<epoch_f1:
+                        best_F1 = epoch_f1
                         try:
                             os.mkdir(dir_checkpoint)
                             logging.info('Created checkpoint directory')
@@ -209,6 +208,15 @@ def train_net(model_fl,
                             pass
                         torch.save(model_fl.state_dict(), dir_checkpoint + f'best_checkpoint.pth')
                         logging.info(f'Checkpoint {epoch + 1} saved !')
+                    #if epoch_loss<best_loss:
+                    #    best_loss = epoch_loss
+                    #    try:
+                    #        os.mkdir(dir_checkpoint)
+                    #        logging.info('Created checkpoint directory')
+                    #    except OSError:
+                    #        pass
+                    #    torch.save(model_fl.state_dict(), dir_checkpoint + f'best_checkpoint.pth')
+                    #    logging.info(f'Checkpoint {epoch + 1} saved !')
 
 
     writer.close()
