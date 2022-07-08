@@ -57,10 +57,10 @@ def train_net(model_fl,
     rotate = p_tr.RandomRotation(degrees=60, fill=(0, 0, 0), fill_tg=0)
     scale = p_tr.RandomAffine(degrees=0, scale=(0.95, 1.10))
     transl = p_tr.RandomAffine(degrees=0, translate=(0.05, 0))
-    elastic = p_tr.RandomElastic(alpha=1, sigma=0.05)
+    #elastic = p_tr.RandomElastic(alpha=1, sigma=0.05)
     gaussblur = p_tr.RandomGaussBlur(radius=(0,1.1))
     # either translate, rotate, scale, elastic, gaussblur
-    scale_transl_rot = p_tr.RandomChoice([scale, transl, rotate, elastic, gaussblur])
+    scale_transl_rot = p_tr.RandomChoice([scale, transl, rotate, gaussblur])
     # intensity transforms
     brightness, contrast, saturation, hue = 0.25, 0.25, 0.25, 0.01
     jitter = p_tr.ColorJitter(brightness, contrast, saturation, hue)
