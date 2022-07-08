@@ -99,7 +99,7 @@ def train_net(model_fl,
 
 
     early_stop_path = dir_checkpoint + 'es_checkpoint.pth'
-    early_stop = EarlyStopping(patience=11,verbose=True, path=early_stop_path)
+    early_stop = EarlyStopping(patience=25,verbose=True, path=early_stop_path)
     best_acc =0.0
     best_loss = 100
     for epoch in range(epochs):
