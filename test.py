@@ -94,7 +94,7 @@ def test_net(model_fl,
         epoch_mse = running_mse / n_test 
         epoch_iou = running_iou / n_test
 
-        print('Sklearn Testing Metrics - Acc: {:.4f} AUC-roc: {:.4f} F1-score: {:.4f}'.format(epoch_acc, epoch_f1, epoch_mse, epoch_iou)) 
+        print('Sklearn Testing Metrics - Acc: {:.4f} F1-score: {:.4f} MSE: {:.4f} IoU: {:.4f}'.format(epoch_acc, epoch_f1, epoch_mse, epoch_iou)) 
 
     
 
