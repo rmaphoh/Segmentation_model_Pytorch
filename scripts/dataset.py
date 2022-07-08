@@ -24,7 +24,7 @@ class BasicDataset(Dataset):
 
         idx = self.ids[index]
         label_file = glob(self.label_dir + idx  + '*')
-        img_file = glob(self.imgs_dir_ + idx + '*')         
+        img_file = glob(self.imgs_dir_ + idx + '*')    
 
         label = Image.open(label_file[0])
         img = Image.open(img_file[0])
