@@ -3,33 +3,41 @@ import logging
 import os
 import torch
 import cv2
+from skimage import io
+import shutil
 import numpy as np
 import pandas as pd
 import torch.nn as nn
 from tqdm import tqdm
 from pycm import *
 import matplotlib.pyplot as plt
-from scripts.dataset import BasicDataset
+from scripts.dataset import BasicDataset_outside
 from scripts.model import arch_select
 import scripts.paired_transforms_tv04 as p_tr
 from torch.utils.data import DataLoader
-from sklearn.metrics import confusion_matrix, mean_squared_error 
+from skimage.morphology import skeletonize,remove_small_objects
 
 
-def misc_measures(true_vessel_arr, pred_vessel_arr):
-    cm=confusion_matrix(true_vessel_arr, pred_vessel_arr)
-    mse = mean_squared_error(true_vessel_arr, pred_vessel_arr)
 
-    try:
-        sensitivity=1.*cm[1,1]/(cm[1,0]+cm[1,1])
-        precision=1.*cm[1,1]/(cm[1,1]+cm[0,1])
-        F1_score = 2*precision*sensitivity/(precision+sensitivity)
-        iou = 1.*cm[1,1]/(cm[1,0]+cm[0,1]+cm[1,1])
-        return F1_score, mse, iou
-    
-    except:
+def filter_frag(data_path):
 
-        return 0,0,0
+    image_list=os.listdir(data_path)
+
+    for i in sorted(image_list):
+        img=io.imread(data_path + i, as_gray=True).astype(np.int64)
+        img2=img>0
+        img2 = remove_small_objects(img2, 20, connectivity=5)
+        
+        io.imsave(data_path + i , 255*(img2.astype('uint8')),check_contrast=False)
+
+        skeleton = skeletonize(img2)
+        
+        if not os.path.isdir('../Results/M2/binary_skeleton/'):
+            os.makedirs('../Results/M2/binary_skeleton/') 
+        io.imsave('../Results/M2/binary_skeleton/' + i, 255*(skeleton.astype('uint8')),check_contrast=False)
+        
+
+
 
 
 def test_net(model_fl,
@@ -39,7 +47,7 @@ def test_net(model_fl,
               image_size=(512,512)
               ):
 
-    storage_path ="./Results/{}/".format(csv_path.split('/')[1])
+    storage_path ="../Results/M2/binary_vessel/".format(csv_path.split('/')[1])
     n_classes = args.n_class
     if not os.path.isdir(storage_path):
         os.makedirs(storage_path)
@@ -48,14 +56,9 @@ def test_net(model_fl,
     tensorizer = p_tr.ToTensor()
     val_transforms = p_tr.Compose([resize, tensorizer])
 
-    test_dataset = BasicDataset(csv_path, transforms=val_transforms)
+    test_dataset = BasicDataset_outside(csv_path, transforms=val_transforms)
     n_test = len(test_dataset)
     val_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=False, drop_last=False)
-
-    running_f1_score = 0
-    running_mse = 0
-    running_iou = 0
-    running_corrects = 0
 
 
     for epoch in range(epochs):
@@ -65,12 +68,9 @@ def test_net(model_fl,
         with tqdm(total=n_test, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
             for batch in val_loader:
                 imgs = batch['image']
-                true_label = batch['label']
                 filename = batch['name'][0]
 
                 imgs = imgs.to(device=device, dtype=torch.float32)
-                label_type = torch.float32 if n_classes == 1 else torch.long
-                true_label = true_label.to(device=device, dtype=label_type)
 
                 prediction = model_fl(imgs)
 
@@ -80,27 +80,21 @@ def test_net(model_fl,
 
                 else:
                     prediction_softmax = nn.Softmax(dim=1)(prediction)
-                    _,prediction_decode = torch.max(prediction_softmax, 1)                    
+                    _,prediction_decode = torch.max(prediction_softmax, 1)     
 
                 from torchvision.utils import save_image
 
-                
                 save_image(prediction_decode.to(torch.float32), storage_path+ filename+ '.png')
 
-                running_corrects += torch.sum(prediction_decode == true_label.data)
-                f1_score_, mse_, iou_ = misc_measures(true_label.cpu().flatten(), prediction_decode.cpu().flatten()) * imgs.size(0)
-                running_f1_score += f1_score_
-                running_mse += mse_
-                running_iou += iou_
-
                 pbar.update(imgs.shape[0])
+    
 
-        epoch_acc = running_corrects.double() / n_test / (true_label.shape[1]*true_label.shape[2])
-        epoch_f1 = running_f1_score / n_test 
-        epoch_mse = running_mse / n_test 
-        epoch_iou = running_iou / n_test
+    filter_frag(storage_path)
 
-        print('Sklearn Testing Metrics - Acc: {:.4f} F1-score: {:.4f} MSE: {:.4f} IoU: {:.4f}'.format(epoch_acc, epoch_f1, epoch_mse, epoch_iou)) 
+
+    
+
+    
 
     
 

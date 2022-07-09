@@ -128,18 +128,27 @@ def train_net(model_fl,
                         label_type = torch.float32 if n_classes == 1 else torch.long
                         true_label = true_label.to(device=device, dtype=label_type)
 
+                        if n_classes==1:
+                            true_label = torch.unsqueeze(true_label, 1)
+
                         optimizer.zero_grad()
 
                         prediction = model_fl(imgs)
 
-                        prediction_softmax = nn.Softmax(dim=1)(prediction)
-                        _,prediction_decode = torch.max(prediction_softmax, 1)
+                        if n_classes==1:
+                            prediction_sigmoid = torch.sigmoid(prediction)
+                            prediction_decode=((prediction_sigmoid)>0.5).to(float)
+                        else:
+                            prediction_softmax = nn.Softmax(dim=1)(prediction)
+                            _,prediction_decode = torch.max(prediction_softmax, 1)
+
                         loss_class_CE = L_class_CE(prediction, true_label)
 
                         loss_class = loss_class_CE 
                         loss_class.backward()
 
                         running_loss += loss_class.item() * imgs.size(0)
+                        
                         running_corrects += torch.sum(prediction_decode == true_label.data)
 
                         optimizer.step()
@@ -149,7 +158,7 @@ def train_net(model_fl,
                         pbar.update(imgs.shape[0])
 
                 epoch_loss = running_loss / n_train
-                epoch_acc = running_corrects.double() / n_train / (true_label.shape[1]*true_label.shape[2])
+                epoch_acc = running_corrects.double() / n_train / (imgs.shape[2]*imgs.shape[3])
                 
                 writer.add_scalar('Acc/training_acc', epoch_acc, epoch) 
                 writer.add_scalar('Loss/training_loss', epoch_loss, epoch) 
@@ -166,13 +175,21 @@ def train_net(model_fl,
                             imgs = imgs.to(device=device, dtype=torch.float32)
                             label_type = torch.float32 if n_classes == 1 else torch.long
                             true_label = true_label.to(device=device, dtype=label_type)
+                            
+                            if n_classes==1:
+                                true_label = torch.unsqueeze(true_label, 1)
 
                             optimizer.zero_grad()
 
                             prediction = model_fl(imgs)
 
-                            prediction_softmax = nn.Softmax(dim=1)(prediction)
-                            _,prediction_decode = torch.max(prediction_softmax, 1)
+                            if n_classes==1:
+                                prediction_sigmoid = torch.sigmoid(prediction)
+                                prediction_decode=((prediction_sigmoid)>0.5).to(float)
+                            else:
+                                prediction_softmax = nn.Softmax(dim=1)(prediction)
+                                _,prediction_decode = torch.max(prediction_softmax, 1)                                
+                            
                             loss_class_CE = L_class_CE(prediction, true_label)
 
                             running_loss += loss_class_CE.item() * imgs.size(0)
@@ -183,7 +200,7 @@ def train_net(model_fl,
                             running_iou += iou_
 
                     epoch_loss = running_loss / n_val
-                    epoch_acc = running_corrects.double() / n_val / (true_label.shape[1]*true_label.shape[2])
+                    epoch_acc = running_corrects.double() / n_val / (imgs.shape[2]*imgs.shape[3])
                     epoch_f1 = running_f1_score / n_val
 
                     writer.add_scalar('Acc/val_acc', epoch_acc, epoch) 
