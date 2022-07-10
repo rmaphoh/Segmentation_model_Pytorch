@@ -44,11 +44,7 @@ def test_net(model_fl,
     if not os.path.isdir(storage_path):
         os.makedirs(storage_path)
 
-    resize = p_tr.Resize(image_size)
-    tensorizer = p_tr.ToTensor()
-    val_transforms = p_tr.Compose([resize, tensorizer])
-
-    test_dataset = BasicDataset(csv_path, transforms=val_transforms)
+    test_dataset = BasicDataset(imgs_dir=csv_path, img_size=image_size, train_or=False)
     n_test = len(test_dataset)
     val_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=False, drop_last=False)
 
@@ -73,7 +69,7 @@ def test_net(model_fl,
                 true_label = true_label.to(device=device, dtype=label_type)
 
                 prediction = model_fl(imgs)
-
+                
                 if n_classes==1:
                     prediction_sigmoid = torch.sigmoid(prediction)
                     prediction_decode=((prediction_sigmoid)>0.5).to(float)

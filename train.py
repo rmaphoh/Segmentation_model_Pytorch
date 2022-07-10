@@ -48,26 +48,10 @@ def train_net(model_fl,
     if not os.path.isdir(dir_checkpoint):
         os.makedirs(dir_checkpoint)
 
-
-    # define image processing and augmentation
-    resize = p_tr.Resize(image_size)
-    tensorizer = p_tr.ToTensor()
-    # geometric transforms
-    h_flip = p_tr.RandomHorizontalFlip()
-    rotate = p_tr.RandomRotation(degrees=60, fill=(0, 0, 0), fill_tg=0)
-    scale = p_tr.RandomAffine(degrees=0, scale=(0.95, 1.10))
-    transl = p_tr.RandomAffine(degrees=0, translate=(0.05, 0))
-    #elastic = p_tr.RandomElastic(alpha=1, sigma=0.05)
-    gaussblur = p_tr.RandomGaussBlur(radius=(0,1.1))
-    # either translate, rotate, scale, elastic, gaussblur
-    scale_transl_rot = p_tr.RandomChoice([scale, transl, rotate, gaussblur])
-    # intensity transforms
-    brightness, contrast, saturation, hue = 0.25, 0.25, 0.25, 0.01
-    jitter = p_tr.ColorJitter(brightness, contrast, saturation, hue)
-    train_transforms = p_tr.Compose([resize,  scale_transl_rot, jitter, h_flip, tensorizer])
     
+    # construct dataset and dataloader
 
-    train_dataset_all = BasicDataset(csv_path, transforms=train_transforms)
+    train_dataset_all = BasicDataset(imgs_dir=csv_path, img_size=image_size, train_or=True)
     n_val = int(len(train_dataset_all) * val_percent)
     n_train = len(train_dataset_all) - n_val
     train, val = random_split(train_dataset_all, [n_train, n_val], generator=torch.Generator().manual_seed(42))
@@ -128,8 +112,8 @@ def train_net(model_fl,
                         label_type = torch.float32 if n_classes == 1 else torch.long
                         true_label = true_label.to(device=device, dtype=label_type)
 
-                        if n_classes==1:
-                            true_label = torch.unsqueeze(true_label, 1)
+                        #if n_classes==1:
+                        #    true_label = torch.unsqueeze(true_label, 1)
 
                         optimizer.zero_grad()
 
@@ -176,8 +160,8 @@ def train_net(model_fl,
                             label_type = torch.float32 if n_classes == 1 else torch.long
                             true_label = true_label.to(device=device, dtype=label_type)
                             
-                            if n_classes==1:
-                                true_label = torch.unsqueeze(true_label, 1)
+                            #if n_classes==1:
+                            #    true_label = torch.unsqueeze(true_label, 1)
 
                             optimizer.zero_grad()
 

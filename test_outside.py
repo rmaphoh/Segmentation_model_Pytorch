@@ -52,11 +52,7 @@ def test_net(model_fl,
     if not os.path.isdir(storage_path):
         os.makedirs(storage_path)
 
-    resize = p_tr.Resize(image_size)
-    tensorizer = p_tr.ToTensor()
-    val_transforms = p_tr.Compose([resize, tensorizer])
-
-    test_dataset = BasicDataset_outside(csv_path, transforms=val_transforms)
+    test_dataset = BasicDataset_outside(imgs_dir=csv_path, img_size=image_size)
     n_test = len(test_dataset)
     val_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=1, pin_memory=False, drop_last=False)
 
@@ -93,13 +89,6 @@ def test_net(model_fl,
 
 
     
-
-    
-
-    
-
-
-
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks',
