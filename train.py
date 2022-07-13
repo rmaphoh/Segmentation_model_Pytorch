@@ -186,14 +186,18 @@ def train_net(model_fl,
                     epoch_loss = running_loss / n_val
                     epoch_acc = running_corrects.double() / n_val / (imgs.shape[2]*imgs.shape[3])
                     epoch_f1 = running_f1_score / n_val
+                    epoch_mse = running_mse / n_val
+                    epoch_iou = running_iou / n_val
 
                     writer.add_scalar('Acc/val_acc', epoch_acc, epoch) 
                     writer.add_scalar('Loss/val_loss', epoch_loss, epoch) 
                     writer.add_scalar('F1/val_f1', epoch_f1, epoch) 
+                    writer.add_scalar('MSE/val_loss', epoch_mse, epoch) 
+                    writer.add_scalar('IoU/val_f1', epoch_iou, epoch) 
 
                     scheduler.step(epoch_loss)
 
-                    print('Validation Loss: {:.4f} Acc: {:.4f} F1: {:.4f}'.format(epoch_loss, epoch_acc, epoch_f1)) 
+                    print('Validation Loss: {:.4f} Acc: {:.4f} F1: {:.4f} MSE: {:.4f} IoU: {:.4f}'.format(epoch_loss, epoch_acc, epoch_f1,epoch_mse,epoch_iou)) 
 
                     early_stop(epoch_loss, model_fl)  
 

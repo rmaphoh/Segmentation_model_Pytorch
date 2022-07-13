@@ -90,7 +90,7 @@ class BasicDataset(Dataset):
     
 class BasicDataset_outside(Dataset):
     def __init__(self, imgs_dir, img_size):
-        self.imgs_dir_ = imgs_dir + 'images/'
+        self.imgs_dir_ = imgs_dir
         self.img_size = img_size
         self.ids = [splitext(file)[0] for file in listdir(self.imgs_dir_)
                     if not file.startswith('.')]
